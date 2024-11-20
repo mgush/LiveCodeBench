@@ -50,21 +50,21 @@ Since LiveCodeBench is a continuously updated benchmark, we provide different ve
 You can use the `--release_version` flag to specify the dataset version you wish to use. Particularly, you can use the following command to run the evaluation on the `release_v2` dataset. Release version defaults to `release_latest`.
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario codegeneration --evaluate --release_version release_v2
+python -m livecodebench.runner.main --model {model_name} --scenario codegeneration --evaluate --release_version release_v2
 ```
 
 ### Code Generation
 
 We use `vllm` for inference using open models. By default, we use  `tensor_parallel_size=${num_gpus}` to parallelize inference across all available GPUs. It can be configured using the  `--tensor_parallel_size` flag as required. 
 
-For running the inference, please provide the `model_name` based on the [./lcb_runner/lm_styles.py](./lcb_runner/lm_styles.py) file.
+For running the inference, please provide the `model_name` based on the [./livecodebench/lm_styles.py](./livecodebench/lm_styles.py) file.
 The scenario (here `codegeneration`) can be used to specify the scenario for the model.
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario codegeneration
+python -m livecodebench.runner.main --model {model_name} --scenario codegeneration
 ```
 
-Additionally, `--use_cache` flag can be used to cache the generated outputs and `--continue_existing` flag can be used to use the existing dumped results. In case you wish to use model from a local path, you can additionally provide `--local_model_path` flag with the path to the model. We use `n=10` and `temperature=0.2` for generation. Please check the [./lcb_runner/runner/parser.py](./lcb_runner/runner/parser.py) file for more details on the flags.
+Additionally, `--use_cache` flag can be used to cache the generated outputs and `--continue_existing` flag can be used to use the existing dumped results. In case you wish to use model from a local path, you can additionally provide `--local_model_path` flag with the path to the model. We use `n=10` and `temperature=0.2` for generation. Please check the [./livecodebench/runner/parser.py](./livecodebench/runner/parser.py) file for more details on the flags.
 
 For closed API models,  `--multiprocess` flag can be used to parallelize queries to API servers (adjustable according to rate limits).
 
@@ -75,17 +75,17 @@ We use a modified version of the checker released with the [`apps` benchmark](ht
 
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario codegeneration --evaluate
+python -m livecodebench.runner.main --model {model_name} --scenario codegeneration --evaluate
 ```
 
 Note that time limits can cause slight (`< 0.5`) points of variation in the computation of the `pass@1` and `pass@5` metrics.
 If you observe a significant variation in performance, adjust the `--num_process_evaluate` flag to a lower value or increase the `--timeout` flag. Please report particular issues caused by improper timeouts here. 
 
-Finally, to get scores over different time windows, you can use [./lcb_runner/evaluation/compute_scores.py](./lcb_runner/evaluation/compute_scores.py) file. 
+Finally, to get scores over different time windows, you can use [./livecodebench/evaluation/compute_scores.py](./livecodebench/evaluation/compute_scores.py) file. 
 Particularly, you can provide `--start_date` and `--end_date` flags (using the `YYYY-MM-DD` format) to get scores over the specified time window. In our paper, to counter contamination in the DeepSeek models, we only report results on problems released after August 2023. You can replicate those evaluations using:
 
 ```bash
-python -m lcb_runner.evaluation.compute_scores --eval_all_file {saved_eval_all_file} --start_date 2023-09-01
+python -m livecodebench.evaluation.compute_scores --eval_all_file {saved_eval_all_file} --start_date 2023-09-01
 ```
 
 **NOTE: We have pruned a large number of test cases from the original benchmark and created `code_generation_lite` which is set as the default benchmark offering similar performance estimation much faster. If you wish to use the original benchmark, please use the `--not_fast` flag. We are in the process of updating the leaderboard scores with this updated setting.** 
@@ -97,13 +97,13 @@ python -m lcb_runner.evaluation.compute_scores --eval_all_file {saved_eval_all_f
 For running self repair, you need to provide an additional `--codegen_n` flag that maps to the number of codes that were generated during code generation. Additionally, the `--temperature` flag is used to resolve the old code generation eval file which must be present in the `output` directory. 
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name --scenario selfrepair --codegen_n {num_codes_codegen} --n 1 # only n=1 supported
+python -m livecodebench.runner.main --model {model_name --scenario selfrepair --codegen_n {num_codes_codegen} --n 1 # only n=1 supported
 ```
 
 In case you have results on a smaller subset or version of the benchmark, you can use `--continue_existing` and `--continue_existing_with_eval` flags to reuse the old computations. Particularly, you can run the following command to continue from existing generated solutions.
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario selfrepair --evaluate --continue_existing
+python -m livecodebench.runner.main --model {model_name} --scenario selfrepair --evaluate --continue_existing
 ```
 
 Note that this will only reuse the generated samples and rerun evaluations. To reuse the old evaluations, you can add the `--continue_existing_with_eval` flag.
@@ -112,27 +112,27 @@ Note that this will only reuse the generated samples and rerun evaluations. To r
 For running the test output prediction scenario you can simply run
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario testoutputprediction --evaluate
+python -m livecodebench.runner.main --model {model_name} --scenario testoutputprediction --evaluate
 ```
 
 ### Code Execution
 For running the test output prediction scenario you can simply run
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario codeexecution --evaluate
+python -m livecodebench.runner.main --model {model_name} --scenario codeexecution --evaluate
 ```
 
 Additionally, we support the COT setting with
 
 ```bash
-python -m lcb_runner.runner.main --model {model_name} --scenario codeexecution --cot_code_execution --evaluate
+python -m livecodebench.runner.main --model {model_name} --scenario codeexecution --cot_code_execution --evaluate
 ```
 
 ## Custom Evaluation
-Alternatively, you can using [`lcb_runner/runner/custom_evaluator.py`](./lcb_runner/runner/custom_evaluator.py) to directly evaluated model generations in a custom file. The file should contain a list of model outputs, appropirately formatted for evaluation in the order of benchmark problems. 
+Alternatively, you can using [`livecodebench/runner/custom_evaluator.py`](./livecodebench/runner/custom_evaluator.py) to directly evaluated model generations in a custom file. The file should contain a list of model outputs, appropirately formatted for evaluation in the order of benchmark problems. 
 
 ```bash
-python -m lcb_runner.runner.custom_evaluator --custom_output_file {path_to_custom_outputs}
+python -m livecodebench.runner.custom_evaluator --custom_output_file {path_to_custom_outputs}
 ```
 
 Particularly, arrange the outputs in the following format
@@ -149,13 +149,13 @@ Particularly, arrange the outputs in the following format
 
 To add support for new models, we have implemented an extensible framework to add new models and customize prompts appropirately. 
 
-Step 1: Add a new model to the [./lcb_runner/lm_styles.py](./lcb_runner/lm_styles.py) file. Particularly, extend the `LMStyle` class to add a new model family and extend the model to the `LanguageModelList` array.
+Step 1: Add a new model to the [./livecodebench/lm_styles.py](./livecodebench/lm_styles.py) file. Particularly, extend the `LMStyle` class to add a new model family and extend the model to the `LanguageModelList` array.
 
-Step 2: Since we use instruction tuned models, we allow configuring the instruction for each model. Modify the [./lcb_runner/prompts/generation.py](./lcb_runner/prompts/generation.py) file to add a new prompt for the model in the `format_prompt_generation` function. 
+Step 2: Since we use instruction tuned models, we allow configuring the instruction for each model. Modify the [./livecodebench/prompts/generation.py](./livecodebench/prompts/generation.py) file to add a new prompt for the model in the `format_prompt_generation` function. 
 For example, the prompt for `DeepSeekCodeInstruct` family of models looks as follows
 
 ```python
-# ./lcb_runner/prompts/generation.py
+# ./livecodebench/prompts/generation.py
 if LanguageModelStyle == LMStyle.DeepSeekCodeInstruct:
     prompt = f"{PromptConstants.SYSTEM_MESSAGE_DEEPSEEK}\n\n"
     prompt += f"{get_deepseekcode_question_template_answer(question)}"
