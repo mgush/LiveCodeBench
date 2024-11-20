@@ -62,9 +62,10 @@ def main():
             for instance in benchmark
             if instance.question_id not in old_save_results_question_ids
         ]
-        print(
-            f"Found {len(old_save_results)} existing generations, continuing with {len(remaining_benchmark)} remaining"
-        )
+        # print(
+        #     f"Found {len(old_save_results)} existing generations, continuing with {len(remaining_benchmark)} remaining"
+        # )
+        logger.info("Found %s existing generations, continuing with %s remaining", len(old_save_results), len(remaining_benchmark))
     else:
         old_save_results = []
         remaining_benchmark = benchmark

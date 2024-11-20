@@ -1,3 +1,4 @@
+import logging
 import json
 from enum import Enum
 from datetime import datetime
@@ -5,6 +6,7 @@ from dataclasses import dataclass
 
 from datasets import load_dataset
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class CodeExecutionProblem:
@@ -59,7 +61,7 @@ class CodeExecutionProblem:
 def load_code_execution_dataset(release_version="release_v1") -> list[CodeExecutionProblem]:
     dataset = load_dataset("livecodebench/execution-v2", split="test", verification_mode="no_checks")
     dataset = [CodeExecutionProblem(**p) for p in dataset]  # type: ignore
-    print(f"Loaded {len(dataset)} problems")
+    logger.info("Loaded %s problems", len(dataset))
     return dataset
 
 
