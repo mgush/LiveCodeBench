@@ -17,6 +17,7 @@ class GigaRunner(BaseRunner):
         assert args.devices_config is not None, "Provide devices config"
         if GigaRunner.client.config is None:
             config = GigaConfig.load_from_config(args.devices_config)
+            print(config)
             GigaRunner.client.update_config(config=config)
 
     def _run_single(self, prompt: list[dict[str, str]]) -> list[str]:

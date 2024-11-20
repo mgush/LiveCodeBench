@@ -1,3 +1,4 @@
+import logging
 import base64
 import json
 from typing import Any, Optional
@@ -8,10 +9,7 @@ from pydantic import BaseModel, model_validator
 import yaml
 import requests
 
-import logging
 
-# LOGGING_FMT = "[%(asctime)s][%(levelname)-8s][%(name)-24s] %(message)s"
-# logging.basicConfig(filename="giga.log", filemode="w", level=logging.INFO, format=LOGGING_FMT, force=True)
 logger = logging.getLogger(__name__)
 
 
