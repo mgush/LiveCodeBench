@@ -1,7 +1,7 @@
 import logging
 import base64
 import json
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, model_validator
@@ -17,6 +17,8 @@ class GigaParams(BaseModel):
     temperature: Optional[float] = None
     top_p: Optional[float] = None
     max_tokens: Optional[int] = None
+    repetition_penalty: Optional[float] = None
+    profanity_check: bool = False
 
     @model_validator(mode="before")
     @classmethod
@@ -28,6 +30,13 @@ class GigaParams(BaseModel):
             logger.warning("Updated temperate value. After: %s", data)
         return data
 
+def parse_common_config(config: Dict) -> Dict:
+    devices_config = config.copy()["devices"]
+    unused_columns = ("tpm", "rpm", "parallel")
+    for column in unused_columns:
+        if column in devices_config:
+            del devices_config[column]
+    return devices_config
 
 class GigaApiConfig(BaseModel):
     base_url: str
@@ -45,7 +54,7 @@ class GigaConfig(BaseModel):
     @classmethod
     def load_from_config(cls, path: str):
         with open(path, encoding="utf-8") as f:
-            return cls(**yaml.safe_load(f))
+            return cls(**parse_common_config(yaml.safe_load(f)))
 
 class GigaChat:
     def __init__(self):
