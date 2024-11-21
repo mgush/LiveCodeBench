@@ -2,9 +2,11 @@ import json
 from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass
+import logging
 
 from datasets import load_dataset
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class Test:
@@ -62,7 +64,8 @@ class TestOutputPredictionProblem:
 def load_test_prediction_dataset(release_version="release_v1") -> list[TestOutputPredictionProblem]:
     dataset = load_dataset("livecodebench/test_generation", split="test")  # type: ignore
     dataset = [TestOutputPredictionProblem(**d) for d in dataset]
-    print(f"Loaded {len(dataset)} prediction problems")
+    # print(f"Loaded {len(dataset)} prediction problems")
+    logger.info("Loaded %s problems", len(dataset))
     return dataset
 
 

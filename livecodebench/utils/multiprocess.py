@@ -138,6 +138,7 @@ def run_tasks_in_parallel_iter(
                 total=len(tasks),
                 dynamic_ncols=True,
                 file=sys.stdout,
+                leave=False,
             )
         else:
             pbar = None

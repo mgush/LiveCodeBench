@@ -82,7 +82,7 @@ def test_output_metrics(
 ):
     num_samples = len(samples)
     results = []
-    for idx in tqdm.tqdm(list(range(num_samples))):
+    for idx in tqdm.tqdm(list(range(num_samples)), leave=False):
         idx_results = []
         sample = samples[idx]
         extracted_generation_list = generations[idx]

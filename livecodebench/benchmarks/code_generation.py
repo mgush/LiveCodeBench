@@ -1,4 +1,5 @@
 import json
+import logging
 import zlib
 import pickle
 import base64
@@ -8,6 +9,8 @@ from dataclasses import dataclass
 
 from datasets import load_dataset
 
+
+logger = logging.getLogger(__name__)
 
 class Platform(Enum):
     LEETCODE = "leetcode"
@@ -124,14 +127,16 @@ class CodeGenerationProblem:
 def load_code_generation_dataset(release_version="release_v1") -> list[CodeGenerationProblem]:
     dataset = load_dataset("livecodebench/code_generation_lite", split="test", version_tag=release_version, trust_remote_code=True)
     dataset = [CodeGenerationProblem(**p) for p in dataset]  # type: ignore
-    print(f"Loaded {len(dataset)} problems")
+    # print(f"Loaded {len(dataset)} problems")
+    logger.info("Loaded %s problems", len(dataset))
     return dataset
 
 
 def load_code_generation_dataset_not_fast(release_version="release_v1") -> list[CodeGenerationProblem]:
     dataset = load_dataset("livecodebench/code_generation", split="test")
     dataset = [CodeGenerationProblem(**p) for p in dataset]  # type: ignore
-    print(f"Loaded {len(dataset)} problems")
+    # print(f"Loaded {len(dataset)} problems")
+    logger.info("Loaded %s problems", len(dataset))
     return dataset
 
 

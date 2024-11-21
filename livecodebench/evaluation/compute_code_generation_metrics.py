@@ -130,7 +130,7 @@ def evaluate_generations(
         for index in range(len(generations_list))
     ]
 
-    with tqdm(total=len(inputs)) as pbar:
+    with tqdm(total=len(inputs), leave=False) as pbar:
         with ProcessPoolExecutor(
             max_workers=1 if debug else num_process_evaluate
         ) as executor:

@@ -92,7 +92,7 @@ class BaseRunner(ABC):
                     print(output.exception_tb)
                     outputs.extend([""] * self.args.n)
         else:
-            outputs = [self.run_single(argument) for argument in tqdm(arguments)]
+            outputs = [self.run_single(argument) for argument in tqdm(arguments, leave=False)]
 
         if self.args.use_cache:
             for prompt, output in zip(prompts, outputs):
