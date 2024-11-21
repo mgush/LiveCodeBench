@@ -206,6 +206,6 @@ def get_metrics(
     else:
         raise ValueError(f"Scenario {scenario} not implemented")
 
-    print(metrics[0]["pass@1"])
+    # print(metrics[0]["pass@1"])
 
     return metrics

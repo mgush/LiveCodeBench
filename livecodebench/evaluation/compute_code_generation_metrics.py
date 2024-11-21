@@ -1,6 +1,7 @@
 # borrowed and extended from
 # https://github.com/Naman-ntc/codescratch/blob/main/evaluation/bigcode-evaluation-harness/lm_eval/tasks/custom_metrics/apps_custom_metrics/utils.py
 
+import logging
 import os
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -16,6 +17,7 @@ from tqdm import tqdm
 from livecodebench.evaluation.testing_util import run_test
 from livecodebench.evaluation.pass_k_utils import compute_metrics_from_results
 
+logger = logging.getLogger(__name__)
 
 def _temp_run(sample, generation, debug, result, metadata_list, timeout):
     res, metadata = run_test(sample, test=generation, debug=debug, timeout=timeout)
@@ -176,7 +178,8 @@ def codegen_metrics(
             generations_linear.append([generation])
             remap_index.append(idx)
 
-    print(f"Evaluating {len(samples_linear)}...")
+    # print(f"Evaluating {len(samples_linear)}...")
+    logger.info("Evaluating %s...", len(samples_linear))
 
     results_linear, metadatas_linear = evaluate_generations(
         samples_linear,
