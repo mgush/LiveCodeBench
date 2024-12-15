@@ -128,7 +128,7 @@ def load_code_generation_dataset(release_version="release_v1") -> list[CodeGener
     dataset = load_dataset("livecodebench/code_generation_lite", split="test", version_tag=release_version, trust_remote_code=True)
     dataset = [CodeGenerationProblem(**p) for p in dataset]  # type: ignore
     # print(f"Loaded {len(dataset)} problems")
-    logger.info("Loaded %s problems", len(dataset))
+    logger.info("Loaded %s problems of %s", len(dataset), release_version)
     return dataset
 
 
@@ -136,7 +136,7 @@ def load_code_generation_dataset_not_fast(release_version="release_v1") -> list[
     dataset = load_dataset("livecodebench/code_generation", split="test")
     dataset = [CodeGenerationProblem(**p) for p in dataset]  # type: ignore
     # print(f"Loaded {len(dataset)} problems")
-    logger.info("Loaded %s problems", len(dataset))
+    logger.info("Loaded %s problems of %s", len(dataset), release_version)
     return dataset
 
 

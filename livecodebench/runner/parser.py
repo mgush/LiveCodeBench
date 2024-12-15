@@ -1,14 +1,14 @@
-import os
 import argparse
+import os
 from pathlib import Path
 from typing import Optional
 
 import yaml
-
 from pydantic import BaseModel
 
 from livecodebench.runner.giga_base import GigaConfig
 from livecodebench.utils.scenarios import Scenario
+
 
 class Args(BaseModel):
     devices_config: str
@@ -19,16 +19,36 @@ class Args(BaseModel):
     cot_code_execution: bool = False
     n: int = 1
     codegen_n: int = 10
+    temperature: float = 1.0
+    top_p: float = 0.0
+    max_tokens: int = 2048
     multiprocess: int = 0
     stop: str = "###"
     continue_existing: bool = False
     continue_existing_with_eval: bool = False
+    use_cache: bool = False
+    cache_batch_size: int = 100
     debug: bool = False
     evaluate: bool = False
     num_process_evaluate: int = 12
     timeout: int = 6
     custom_output_file: Optional[str] = None
     custom_output_save_name: Optional[str] = None
+    output_path: str = ".lcb_output"
+    config: Optional[GigaConfig] = None
+
+    @classmethod
+    def from_cmd_args(cls, **kwargs):
+        args = cls(**kwargs)
+        args.stop = args.stop.split(",")
+
+        config = GigaConfig.load_from_config(args.devices_config)
+        args.config = config
+        args.temperature = config.params.temperature
+        args.top_p = config.params.top_p
+        args.max_tokens = config.params.max_tokens
+        return args
+
 
 def get_args_from_config_file(config_file) -> Args:
     with open(config_file, encoding="utf-8") as f:
@@ -155,7 +175,7 @@ def get_args():
     parser.add_argument(
         "--output_path",
         type=str,
-        default=None,
+        default=".lcb_output",
         help="Path to script output",
     )
     # parser.add_argument("--dtype", type=str, default="bfloat16", help="Dtype for vllm")

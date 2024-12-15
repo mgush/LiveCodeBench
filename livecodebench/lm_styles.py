@@ -55,7 +55,7 @@ LanguageModelList: list[LanguageModel] = [
         "GigaChat",
         "gigachat-latest",
         LMStyle.GigaChat,
-        datetime(2023, 1, 1),
+        datetime(2024, 6, 1),
     ),
     LanguageModel(
         "meta-llama/Meta-Llama-3-70B",

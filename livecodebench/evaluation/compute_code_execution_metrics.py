@@ -45,7 +45,7 @@ def code_execution_metrics(
     for execution_result in all_results:
         c, n = execution_result.count(True), len(execution_result)
         pass_at_1s.append(pass_at_k(n, c, 1))
-    metrics = {"pass@1": sum(pass_at_1s) / len(pass_at_1s) * 100}
+    metrics = {"pass@1": sum(pass_at_1s) / len(pass_at_1s)}
 
     results = {}
     for i, r in enumerate(all_results):

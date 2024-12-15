@@ -1,30 +1,54 @@
-import os
+from copy import deepcopy
 import json
-
-from livecodebench.runner.parser import get_args, get_args_from_config_file
-from livecodebench.utils.scenarios import Scenario
-from livecodebench.lm_styles import LanguageModelStore
-from livecodebench.runner.runner_utils import build_runner
-from livecodebench.utils.path_utils import get_output_path
-from livecodebench.evaluation import extract_instance_results
-from livecodebench.runner.scenario_router import (
-    build_prompt_benchmark,
-    combine_results,
-    sort_and_extract_save_results,
-    get_metrics,
-)
-
 import logging
+import os
+from typing import Optional
+
+from livecodebench.evaluation import extract_instance_results
+from livecodebench.lm_styles import LanguageModelStore
+from livecodebench.runner.parser import (Args, get_args,
+                                         get_args_from_config_file)
+from livecodebench.runner.runner_utils import build_runner
+from livecodebench.runner.scenario_router import (
+    build_prompt_benchmark, combine_results, get_metrics,
+    sort_and_extract_save_results)
+from livecodebench.utils.path_utils import get_output_path
+from livecodebench.utils.scenarios import Scenario
 
 LOGGING_FMT = "[%(asctime)s][%(levelname)-8s][%(name)-24s] %(message)s"
-logging.basicConfig(filename="runner.log", filemode="a", level=logging.DEBUG, format=LOGGING_FMT, force=True)
+logging.basicConfig(filename="runner.log", filemode="w", level=logging.DEBUG, format=LOGGING_FMT, force=True)
 logger = logging.getLogger(__name__)
 
-def main():
+def main(
+    scenario: str,
+    devices_config: str = ".giga_config.yml",
+    release_version: str = "release_latest",
+    cot_code_execution: bool = False,
+    evaluate: bool = False,
+    debug: bool = False,
+    output_path: str = ".lcb_output",
+    codegen_n: int = 10,
+    continue_existing: bool = True,
+    continue_existing_with_eval: bool = True,
+):
     # args = get_args_from_config_file(".config.yml")
-    args = get_args()
-
-    model = LanguageModelStore[args.model]
+    # args = get_args()
+    args = Args.from_cmd_args(
+        scenario=scenario,
+        devices_config=devices_config,
+        release_version=release_version,
+        evaluate=evaluate,
+        debug=debug,
+        output_path=output_path,
+        codegen_n=codegen_n,
+        continue_existing=continue_existing,
+        continue_existing_with_eval=continue_existing_with_eval,
+    )
+    # print(args)
+    model = deepcopy(LanguageModelStore[args.model])
+    # model = 
+    model.model_repr = f"{model.model_repr}_{args.config.model}"
+    # print(model.model_repr)
     benchmark, format_prompt = build_prompt_benchmark(args)
     if args.debug:
         logger.info("Running with %s instances in debug mode", len(benchmark))

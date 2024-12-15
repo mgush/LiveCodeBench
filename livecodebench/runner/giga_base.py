@@ -1,14 +1,12 @@
-import logging
 import base64
 import json
+import logging
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, model_validator
-
-import yaml
 import requests
-
+import yaml
+from pydantic import BaseModel, model_validator
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +34,8 @@ def parse_common_config(config: Dict) -> Dict:
     for column in unused_columns:
         if column in devices_config:
             del devices_config[column]
+    if "api" not in devices_config:
+        devices_config["api"] = {}
     return devices_config
 
 class GigaApiConfig(BaseModel):

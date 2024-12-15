@@ -65,7 +65,7 @@ def load_test_prediction_dataset(release_version="release_v1") -> list[TestOutpu
     dataset = load_dataset("livecodebench/test_generation", split="test")  # type: ignore
     dataset = [TestOutputPredictionProblem(**d) for d in dataset]
     # print(f"Loaded {len(dataset)} prediction problems")
-    logger.info("Loaded %s problems", len(dataset))
+    logger.info("Loaded %s problems of %s", len(dataset), release_version)
     return dataset
 
 
