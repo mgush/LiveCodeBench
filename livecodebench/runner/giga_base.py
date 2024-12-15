@@ -64,7 +64,8 @@ class GigaChat:
     def update_config(self, config: GigaConfig):
         self.config = config
         logger.info("GigaChat config: %s", config)
-        self.get_token()
+        if self.config.need_auth:
+            self.get_token()
 
     def get_token(self):
         key = base64.b64encode(self.config.login_password.encode()).decode("utf-8")
