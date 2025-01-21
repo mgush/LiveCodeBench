@@ -1,14 +1,13 @@
-import logging
-import base64
 import json
-from typing import Any, Dict, Optional
+import logging
+import os
+import time
+from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
-from pydantic import BaseModel, model_validator
-
-import yaml
 import requests
-
+from pydantic import BaseModel, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +17,11 @@ class GigaParams(BaseModel):
     top_p: Optional[float] = None
     max_tokens: Optional[int] = None
     repetition_penalty: Optional[float] = None
-    profanity_check: bool = False
+    profanity_check: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
-    def check_zero_temperature(cls, data: Any) -> Any:
+    def check_zero_temperature(cls, data: Dict) -> Dict:
         if data["temperature"] == 0.0:
             logger.warning("Updated temperate value. Before: %s", data)
             data["temperature"] = 1.0
@@ -30,74 +29,102 @@ class GigaParams(BaseModel):
             logger.warning("Updated temperate value. After: %s", data)
         return data
 
-def parse_common_config(config: Dict) -> Dict:
-    devices_config = config.copy()["devices"]
-    unused_columns = ("tpm", "rpm", "parallel")
-    for column in unused_columns:
-        if column in devices_config:
-            del devices_config[column]
-    return devices_config
 
-class GigaApiConfig(BaseModel):
+class GigaApiConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="giga_")
+
     base_url: str
     auth_url: str
     route_models: str = "/models"
     route_chat: str = "/chat/completions"
 
+
+class GigaCreds(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="giga_")
+
+    credentials: Optional[str] = None
+    scope: Optional[str] = None
+
+
 class GigaConfig(BaseModel):
-    model: str
     api: GigaApiConfig
-    params: GigaParams
-    login_password: Optional[str] = None
-    need_auth: bool = False
+    credentials: Optional[str] = None  # base64.b64encode(self.config.login_password.encode()).decode("utf-8")
+    scope: Optional[str] = None
+
+    @property
+    def need_auth(self) -> bool:
+        return self.credentials is not None
 
     @classmethod
-    def load_from_config(cls, path: str):
-        with open(path, encoding="utf-8") as f:
-            return cls(**parse_common_config(yaml.safe_load(f)))
+    def from_envs(cls) -> "GigaConfig":
+        api = GigaApiConfig()
+        creds = GigaCreds()
+        return cls(**{"api": api, "credentials": creds.credentials, "scope": creds.scope})
+
 
 class GigaChat:
+    TOKEN_TTL: int = 60 * 29
+    REQUEST_TIMEOUT: int = 10
+
     def __init__(self):
-        self.config = None
+        self.config: GigaConfig = GigaConfig.from_envs()
         self.token = None
+        self.token_ts = None
 
-    def update_config(self, config: GigaConfig):
-        self.config = config
-        logger.info("GigaChat config: %s", config)
-        self.get_token()
+    def get_token(self) -> None:
+        logger.info("getting token")
 
-    def get_token(self):
-        key = base64.b64encode(self.config.login_password.encode()).decode("utf-8")
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json",
             "RqUID": str(uuid4()),
-            "Authorization": f"Basic {key}",
+            "Authorization": f"Basic {self.config.credentials}",
         }
         api = self.config.api
-        self.token = json.loads(requests.post(url=api.auth_url, headers=headers).text)["tok"]
+        self.token = json.loads(requests.post(url=api.auth_url, headers=headers, timeout=self.REQUEST_TIMEOUT).text)[
+            "tok"
+        ]
+        self.token_ts = time.time()
 
-    def create_chat_completion(self, prompt, **kwargs):
+    @property
+    def need_token_update(self) -> bool:
+        return self.config.need_auth and (self.token is None or self.token_ts + self.TOKEN_TTL < time.time())
+
+    def create_chat_completion(
+        self, prompt: Union[List[str], str], model: str, temperature: float, top_p: float, **kwargs
+    ) -> List[str]:
+        if self.need_token_update:
+            self.get_token()
+
         logger.info(prompt)
         api = self.config.api
         url = api.base_url + api.route_chat
-        headers = {"Content-Type": "application/json", "Accept": "application/json", "Authorization": f"Bearer {self.token}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {self.token}",
+        }
         if not isinstance(prompt, list):
             prompt = [prompt]
-        data_raw = {
-            "model": self.config.model,
+        data = {
+            "model": model,
             "messages": prompt,
         }
-        for param in ["temperature", "top_p"]:
-            if param in kwargs:
-                data_raw[param] = float(kwargs[param])
+        params = GigaParams(
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=kwargs.get("max_tokens"),
+            repetition_penalty=kwargs.get("repetition_penalty"),
+            profanity_check=os.getenv("GIGA_PROFANITY_CHECK"),
+        )
 
-        data = json.dumps(data_raw)
+        params_dict = params.model_dump(exclude_none=True)
+        data.update(params_dict)
 
-        response_raw = requests.post(url=url, headers=headers, data=data)
-        logger.info(response_raw.status_code)
+        logger.info("http request data %s", data)
+        response_raw = requests.post(url=url, headers=headers, json=data, timeout=self.REQUEST_TIMEOUT)
+        logger.info("http response status code %s", response_raw.status_code)
         response = json.loads(response_raw.text)
-        # logger.info(response)
         result = [choice["message"]["content"] for choice in response["choices"]]
-        logger.info(result)
+
         return result
