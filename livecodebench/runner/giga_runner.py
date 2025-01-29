@@ -14,17 +14,23 @@ class GigaRunner(BaseRunner):
 
     def __init__(self, args, model):
         super().__init__(args, model)
-        assert args.devices_config is not None, "Provide devices config"
-        if GigaRunner.client.config is None:
-            config = GigaConfig.load_from_config(args.devices_config)
-            GigaRunner.client.update_config(config=config)
+        self.client_kwargs: dict[str | str] = {
+            "model": args.model,
+            "temperature": args.temperature,
+            "max_tokens": args.max_tokens,
+            "top_p": args.top_p,
+        }
+        # assert args.devices_config is not None, "Provide devices config"
+        # if GigaRunner.client.config is None:
+        #     config = GigaConfig.load_from_config(args.devices_config)
+        #     GigaRunner.client.update_config(config=config)
 
     def _run_single(self, prompt: list[dict[str, str]]) -> list[str]:
         assert isinstance(prompt, list)
         results = []
         try:
             answers = GigaRunner.client.create_chat_completion(
-                prompt=prompt,
+                prompt=prompt, **self.client_kwargs
             )
             results.extend(answers)
 

@@ -17,7 +17,7 @@ from livecodebench.runner.scenario_router import (
 import logging
 
 LOGGING_FMT = "[%(asctime)s][%(levelname)-8s][%(name)-24s] %(message)s"
-logging.basicConfig(filename="runner.log", filemode="a", level=logging.DEBUG, format=LOGGING_FMT, force=True)
+logging.basicConfig(filename="runner.log", filemode="w", level=logging.INFO, format=LOGGING_FMT, force=True)
 logger = logging.getLogger(__name__)
 
 def main():

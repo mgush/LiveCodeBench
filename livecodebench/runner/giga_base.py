@@ -63,13 +63,12 @@ class GigaConfig(BaseModel):
 
 
 class GigaChat:
-    TOKEN_TTL: int = 60 * 29
     REQUEST_TIMEOUT: int = 10
 
     def __init__(self):
         self.config: GigaConfig = GigaConfig.from_envs()
         self.token = None
-        self.token_ts = None
+        self.token_exp = None
 
     def get_token(self) -> None:
         logger.info("getting token")
@@ -81,17 +80,21 @@ class GigaChat:
             "Authorization": f"Basic {self.config.credentials}",
         }
         api = self.config.api
-        self.token = json.loads(requests.post(url=api.auth_url, headers=headers, timeout=self.REQUEST_TIMEOUT).text)[
-            "tok"
-        ]
-        self.token_ts = time.time()
+        tokens_data = json.loads(requests.post(url=api.auth_url, headers=headers, timeout=self.REQUEST_TIMEOUT).text)
+        self.token = tokens_data["tok"]
+        self.token_exp = tokens_data["exp"]
 
     @property
     def need_token_update(self) -> bool:
-        return self.config.need_auth and (self.token is None or self.token_ts + self.TOKEN_TTL < time.time())
+        return self.config.need_auth and (self.token is None or self.token_exp < time.time())
 
     def create_chat_completion(
-        self, prompt: Union[List[str], str], model: str, temperature: float, top_p: float, **kwargs
+        self,
+        prompt: Union[List[Dict[str, str]], Dict[str, str]],
+        model: str,
+        temperature: float,
+        top_p: float,
+        **kwargs,
     ) -> List[str]:
         if self.need_token_update:
             self.get_token()

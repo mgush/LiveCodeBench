@@ -84,13 +84,13 @@ def get_args():
         default=10,
         help="Number of samples for which code generation was run (used to map the code generation file during self-repair)",
     )
-    # parser.add_argument(
-    #     "--temperature", type=float, default=0.2, help="Temperature for sampling"
-    # )
-    # parser.add_argument("--top_p", type=float, default=0.95, help="Top p for sampling")
-    # parser.add_argument(
-    #     "--max_tokens", type=int, default=2000, help="Max tokens for sampling"
-    # )
+    parser.add_argument(
+        "--temperature", type=float, default=1.0, help="Temperature for sampling"
+    )
+    parser.add_argument("--top_p", type=float, default=0.0, help="Top p for sampling")
+    parser.add_argument(
+        "--max_tokens", type=int, default=2048, help="Max tokens for sampling"
+    )
     parser.add_argument(
         "--multiprocess",
         default=0,
@@ -164,10 +164,14 @@ def get_args():
 
     args.stop = args.stop.split(",")
 
-    config = GigaConfig.load_from_config(args.devices_config)
-    args.temperature = config.params.temperature
-    args.top_p = config.params.top_p
-    args.max_tokens = config.params.max_tokens
+    # args.temperature = 1.0
+    # args.top_p = 0.0
+    # args.max_tokens = 4096
+
+    # config = GigaConfig.load_from_config(args.devices_config)
+    # args.temperature = config.params.temperature
+    # args.top_p = config.params.top_p
+    # args.max_tokens = config.params.max_tokens
     args.output_path = ".lcb_output" if args.output_path is None else args.output_path
     # args.output_path.mkdir(parents=True, exist_ok=True)
     # assert args.tensor_parallel_size != -1

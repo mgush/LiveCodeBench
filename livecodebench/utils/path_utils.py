@@ -21,7 +21,7 @@ def get_cache_path(model_repr:str, args) -> str:
     return path
 
 
-def get_output_path(model_repr:str, args) -> str:
+def get_output_path(model_repr: str, args) -> str:
     scenario: Scenario = args.scenario
     n = args.n
     temperature = args.temperature
