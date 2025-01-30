@@ -11,6 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
+PROFANITY_CHECK = os.getenv("GIGA_PROFANITY_CHECK")
+
 
 class GigaParams(BaseModel):
     temperature: Optional[float] = None
@@ -23,10 +25,10 @@ class GigaParams(BaseModel):
     @classmethod
     def check_zero_temperature(cls, data: Dict) -> Dict:
         if data["temperature"] == 0.0:
-            logger.warning("Updated temperate value. Before: %s", data)
+            logger.warning("Updated generation parameters. Before: %s", data)
             data["temperature"] = 1.0
             data["top_p"] = 0
-            logger.warning("Updated temperate value. After: %s", data)
+            logger.warning("Updated generation parameters. After: %s", data)
         return data
 
 
@@ -34,7 +36,7 @@ class GigaApiConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="giga_")
 
     base_url: str
-    auth_url: str
+    auth_url: Optional[str] = None
     route_models: str = "/models"
     route_chat: str = "/chat/completions"
 
@@ -80,6 +82,8 @@ class GigaChat:
             "Authorization": f"Basic {self.config.credentials}",
         }
         api = self.config.api
+
+        assert api.auth_url is not None, "GIGA_AUTH_URL is not set"
         tokens_data = json.loads(requests.post(url=api.auth_url, headers=headers, timeout=self.REQUEST_TIMEOUT).text)
         self.token = tokens_data["tok"]
         self.token_exp = tokens_data["exp"]
@@ -94,6 +98,8 @@ class GigaChat:
         model: str,
         temperature: float,
         top_p: float,
+        max_tokens: Optional[int] = None,
+        repetition_penalty: Optional[float] = None,
         **kwargs,
     ) -> List[str]:
         if self.need_token_update:
@@ -109,20 +115,21 @@ class GigaChat:
         }
         if not isinstance(prompt, list):
             prompt = [prompt]
+
+        params = GigaParams(
+            temperature=temperature,
+            top_p=top_p,
+            max_tokens=max_tokens,
+            repetition_penalty=repetition_penalty,
+            profanity_check=PROFANITY_CHECK,
+        )
+
         data = {
             "model": model,
             "messages": prompt,
         }
-        params = GigaParams(
-            temperature=temperature,
-            top_p=top_p,
-            max_tokens=kwargs.get("max_tokens"),
-            repetition_penalty=kwargs.get("repetition_penalty"),
-            profanity_check=os.getenv("GIGA_PROFANITY_CHECK"),
-        )
-
-        params_dict = params.model_dump(exclude_none=True)
-        data.update(params_dict)
+        data.update(kwargs)
+        data.update(params.model_dump(exclude_none=True))
 
         logger.info("http request data %s", data)
         response_raw = requests.post(url=url, headers=headers, json=data, timeout=self.REQUEST_TIMEOUT)
