@@ -11,7 +11,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
-PROFANITY_CHECK = os.getenv("GIGA_PROFANITY_CHECK")
+PROFANITY_CHECK: Optional[bool] = (
+    os.getenv("GIGA_PROFANITY_CHECK").lower().startswith("t")
+    or os.getenv("GIGA_PROFANITY_CHECK").lower().startswith("y")
+    if isinstance(os.getenv("GIGA_PROFANITY_CHECK"), str)
+    else None
+)
 
 
 class GigaParams(BaseModel):
@@ -19,7 +24,7 @@ class GigaParams(BaseModel):
     top_p: Optional[float] = None
     max_tokens: Optional[int] = None
     repetition_penalty: Optional[float] = None
-    profanity_check: Optional[str] = None
+    profanity_check: Optional[bool] = None
 
     @model_validator(mode="before")
     @classmethod
