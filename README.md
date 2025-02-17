@@ -7,6 +7,15 @@ Official repository for the paper "LiveCodeBench: Holistic and Contamination Fre
     <a href="https://livecodebench.github.io/leaderboard.html">🏆 Leaderboard</a> 
 </p>
 
+## Usage example with OBB
+```bash
+# создание образа и проброс переменных
+docker run --env-file giga.env -it -v $PWD/lcb_launch:/app/results/lcb_output --name obb_test obb_image bash
+
+# запуск lcb
+docker exec obb_test /app/venvs/lcb/bin/python -m livecodebench.runner.main --scenario codeexecution --continue_existing --continue_existing_with_eval --output_path results/lcb_output --evaluate
+```
+
 ## Introduction
 LiveCodeBench provides holistic and contamination-free evaluation of coding capabilities of LLMs.  Particularly, LiveCodeBench continuously collects new problems over time from contests across three competition platforms -- LeetCode, AtCoder, and CodeForces. Next, LiveCodeBench also focuses on a broader range of code-related capabilities, such as self-repair, code execution, and test output prediction, beyond just code generation. Currently, LiveCodeBench hosts four hundred high-quality coding problems that were published between May 2023 and March 2024.
 
